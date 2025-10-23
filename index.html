@@ -1,272 +1,115 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-<title>疊空心磚（無外部套件版）</title>
+<meta charset="UTF-8" />
+<title>疊空心磚 - 物理版</title>
+<script src="https://unpkg.com/matter-js@0.20.0/build/matter.min.js"></script>
 <style>
-  html,body{margin:0;height:100%;background:#efefef;font-family:system-ui,"Noto Sans TC",Arial,sans-serif}
-  #ui{position:fixed;left:0;right:0;top:0;display:flex;justify-content:space-between;gap:8px;padding:10px 14px;pointer-events:none}
-  .pill{background:rgba(0,0,0,.7);color:#fff;padding:6px 10px;border-radius:999px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.2)}
-  #center{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
-  .card{pointer-events:auto;background:rgba(255,255,255,.92);border-radius:16px;padding:16px 18px;box-shadow:0 8px 24px rgba(0,0,0,.25);min-width:min(90vw,460px);text-align:center}
-  button{border:none;border-radius:10px;padding:10px 12px;background:#111;color:#fff;font-size:16px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.15)}
-  .secondary{background:#e0e0e0;color:#111}
-  canvas{display:block;width:100vw;height:100vh}
-  .flash{animation:flash .3s linear infinite}@keyframes flash{0%{opacity:1}50%{opacity:.25}100%{opacity:1}}
-  #dbg{position:fixed;left:10px;bottom:10px;font:12px/1.2 monospace;color:#666}
+html, body { margin:0; padding:0; overflow:hidden; background:#f2f2f2; }
+canvas { display:block; margin:0 auto; background:#eaeaea; }
 </style>
 </head>
 <body>
-<canvas id="cv"></canvas>
-<div id="ui">
-  <div id="score" class="pill">Score 0</div>
-  <div id="time"  class="pill">Time 15.0</div>
-</div>
-<div id="center">
-  <div class="card" id="panel">
-    <h2>疊空心磚（無外部套件）</h2>
-    <p>15 秒內把上方左右移動的空心磚放下並堆高。<br>重疊不足會直接掉落，掉出畫面就結束。<br>手機點一下／電腦點擊或空白鍵。</p>
-    <div style="display:flex;gap:8px;justify-content:center">
-      <button id="start">開始遊戲</button>
-      <button class="secondary" id="how">操作說明</button>
-    </div>
-  </div>
-</div>
-<div id="dbg"></div>
-
+<canvas id="world"></canvas>
 <script>
-(()=>{
-// ===== 基本 =====
-const cv = document.getElementById('cv');
-const ctx = cv.getContext('2d');
-let W=innerWidth, H=innerHeight, DPR=Math.min(devicePixelRatio||1,2);
-function resize(){
-  W = innerWidth; H = innerHeight;
-  cv.width = W*DPR; cv.height = H*DPR;
-  cv.style.width = W+'px'; cv.style.height = H+'px';
-  ctx.setTransform(DPR,0,0,DPR,0,0);
-}
-addEventListener('resize', resize); resize();
+const { Engine, Render, Runner, World, Bodies, Body, Events } = Matter;
+const canvas = document.getElementById("world");
+const W = window.innerWidth;
+const H = window.innerHeight;
 
-// ===== 圖片（找不到也可玩） =====
+const engine = Engine.create();
+const world = engine.world;
+engine.gravity.y = 1.2;
+
+// 建立 renderer
+const render = Render.create({
+  canvas,
+  engine,
+  options: {
+    width: W,
+    height: H,
+    background: "#f2f2f2",
+    wireframes: false
+  }
+});
+Render.run(render);
+Runner.run(Runner.create(), engine);
+
+// 地板
+const ground = Bodies.rectangle(W/2, H-40, W, 80, { isStatic: true });
+World.add(world, ground);
+
+// 空心磚圖
 const img = new Image();
-let imgOK = false, AR = 2.4;     // 寬高比
-img.src = 'brick.png';           // 與 index.html 同資料夾
-img.onload = ()=>{ imgOK=true; AR = img.naturalWidth / img.naturalHeight; };
-img.onerror= ()=>{ imgOK=false; };
+img.src = "brick.png"; // 你的PNG
+let brickReady = false;
+img.onload = () => { brickReady = true; };
 
-// ===== 遊戲狀態 =====
-let running = false, timeLeft = 15, score = 0;
-const $score = document.getElementById('score');
-const $time  = document.getElementById('time');
-const $panel = document.getElementById('panel');
-const $center= document.getElementById('center');
-const $dbg   = document.getElementById('dbg');
+// 磚塊設定
+const brickW = 120, brickH = 50;
+let movingBrick = null;
+let moveDir = 1;
+let gameActive = false;
+let score = 0;
 
-// 尺寸：依螢幕與圖片比例
-function brickSize(){
-  const w = Math.max(70, Math.min(160, W*0.2)); // 寬
-  const h = w/AR;                                // 高
-  return {w, h};
-}
-
-// 資料結構
-let mover=null;         // 正在上方左右移動的磚
-let stack=[];           // 已經固定的磚
-let falling=[];         // 正在掉落（失敗的）
-let last=0;
-
-// 建立一個磚資料
-function makeBrick(x,y, vx=0, vy=0, frozen=false){
-  const {w,h} = brickSize();
-  return {x,y,w,h,vx,vy,rot:0,spin:0,frozen}; // 簡化：不做旋轉堆疊，失敗才旋轉掉落
-}
-
-// 初始平台（基座）
-function baseY(){ return H - brickSize().h - 12; }
-function resetWorld(){
-  stack = [];
-  const {w,h} = brickSize();
-  // 基座當作第一層
-  stack.push({x: W/2, y: baseY(), w: w*1.4, h, vx:0, vy:0, rot:0, frozen:true, base:true});
-  mover = null;
-  falling = [];
-}
-
-function spawnMover(){
-  const {w,h} = brickSize();
-  const y = Math.max(90, H*0.16);
-  mover = makeBrick(W/2, y, 180*(Math.random()<.5?-1:1), 0, false);
-}
-
-// 放下
-function drop(){
-  if(!running || !mover) return;
-  mover.vy = 0; // 立刻開始往下落（由重力加速度控制）
-  // 水平速度拿掉，只受重力
-  mover.vx = 0;
-  // 將 mover 加入 falling 列表，待碰撞檢查
-  falling.push(mover);
-  mover=null;
-  score++; $score.textContent = 'Score '+score;
-  setTimeout(()=>{ if(running) spawnMover(); }, 160);
-}
-
-// 互動
-addEventListener('pointerdown', drop, {passive:true});
-addEventListener('keydown', e=>{ if(e.code==='Space'){ e.preventDefault(); drop(); }});
-
-// 物理（簡化）
-const GRAV = 1600;   // 重力像素/秒^2
-const BOUNCE = 0.12; // 掉到底部微彈
-const FRICTION = 0.98;
-
-function step(dt){
-  // 更新倒數
-  timeLeft = Math.max(0, timeLeft - dt);
-  $time.textContent = 'Time ' + timeLeft.toFixed(1);
-  if(timeLeft<=3){ $time.classList.add('flash'); } else { $time.classList.remove('flash'); }
-  if(timeLeft<=0) return gameOver('時間到');
-
-  // mover 左右移動
-  if(mover){
-    mover.x += mover.vx * dt;
-    const margin = Math.max(28, brickSize().w*0.55);
-    if(mover.x < margin){ mover.x=margin; mover.vx = Math.abs(mover.vx); }
-    if(mover.x > W - margin){ mover.x=W - margin; mover.vx = -Math.abs(mover.vx); }
-  }
-
-  // 更新 falling：重力、與最上層的碰撞判定
-  const top = stack[stack.length-1];
-  for(const b of falling){
-    b.vy += GRAV*dt;
-    b.y  += b.vy*dt;
-    b.x  += b.vx*dt;
-    b.rot+= b.spin*dt;
-
-    // 與地板（畫面底部外）簡單處理
-    if(b.y - b.h/2 > H + 120) return gameOver('磚塊掉出畫面');
-
-    // 與 top 的「重疊」判斷（AABB 簡化）
-    if( (b.y + b.h/2) >= (top.y - top.h/2) ){ // 觸到高度
-      const left  = Math.max(b.x - b.w/2, top.x - top.w/2);
-      const right = Math.min(b.x + b.w/2, top.x + top.w/2);
-      const overlap = Math.max(0, right - left);
-      const need = Math.min(b.w, top.w) * 0.5; // 至少 50% 重疊才算成功（可自行調）
-      if(overlap >= need){
-        // 成功：吸附到頂部、微抖動
-        b.y = top.y - top.h/2 - b.h/2;
-        b.vy = 0; b.vx = 0; b.spin = 0; b.frozen = true;
-        stack.push(b);
-        // 往上給一點微晃視覺
-        b.y -= 2; setTimeout(()=>{ b.y += 2; }, 60);
-        // 從 falling 移除
-        falling.splice(falling.indexOf(b),1);
-      }else{
-        // 失敗：開始旋轉自由落體，直到出畫面
-        if(b.spin===0) b.spin = (Math.random()<.5?-1:1) * (1 + Math.random()*2);
-      }
+// 畫面繪圖覆寫 (用圖片)
+Events.on(render, "afterRender", () => {
+  const ctx = render.context;
+  const bodies = Matter.Composite.allBodies(world);
+  ctx.save();
+  bodies.forEach(b => {
+    if (b === ground) return;
+    ctx.translate(b.position.x, b.position.y);
+    ctx.rotate(b.angle);
+    if (brickReady) {
+      ctx.drawImage(img, -brickW/2, -brickH/2, brickW, brickH);
+    } else {
+      ctx.fillStyle = "#999";
+      ctx.fillRect(-brickW/2, -brickH/2, brickW, brickH);
     }
-  }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+  });
+  ctx.restore();
+});
+
+// 新增一塊移動中的磚
+function spawnBrick() {
+  movingBrick = Bodies.rectangle(W/2, 100, brickW, brickH, {
+    isStatic: true,
+    render: { fillStyle: "#888" }
+  });
+  moveDir = 1;
+  World.add(world, movingBrick);
+  gameActive = true;
 }
 
-// 繪圖
-function draw(){
-  ctx.clearRect(0,0,W,H);
+// 控制左右移動與落下
+Events.on(engine, "beforeUpdate", () => {
+  if (!movingBrick) return;
+  const speed = 4;
+  Body.setPosition(movingBrick, {
+    x: movingBrick.position.x + moveDir * speed,
+    y: movingBrick.position.y
+  });
+  if (movingBrick.position.x > W - 80) moveDir = -1;
+  if (movingBrick.position.x < 80) moveDir = 1;
+});
 
-  // 地面陰影
-  ctx.fillStyle = '#d6d6d6';
-  ctx.fillRect(0,H-8,W,8);
-
-  // 畫所有磚（基座 + 堆疊 + 掉落 + mover）
-  const all = stack.concat(falling);
-  if(mover) all.push(mover);
-
-  for(const b of all){
-    ctx.save();
-    ctx.translate(b.x, b.y);
-    ctx.rotate(b.rot || 0);
-    const w=b.w, h=b.h;
-
-    if(imgOK && !b.base){
-      ctx.imageSmoothingEnabled = true;
-      ctx.drawImage(img, -w/2, -h/2, w, h);
-    }else{
-      // 備援灰磚 / 基座
-      const r = Math.min(w,h)*0.08;
-      roundRect(-w/2,-h/2,w,h,r);
-      ctx.fillStyle = b.base ? '#bdbdbd' : '#9e9e9e';
-      ctx.fill();
-      ctx.lineWidth = 1.5; ctx.strokeStyle = '#8b8b8b'; ctx.stroke();
-    }
-    ctx.restore();
-  }
+function dropBrick() {
+  if (!movingBrick) return;
+  Body.setStatic(movingBrick, false);
+  movingBrick = null;
+  score++;
+  setTimeout(spawnBrick, 800);
 }
 
-function roundRect(x,y,w,h,r){
-  r=Math.min(r,w/2,h/2);
-  ctx.beginPath();
-  ctx.moveTo(x+r,y);
-  ctx.arcTo(x+w,y,x+w,y+h,r);
-  ctx.arcTo(x+w,y+h,x,y+h,r);
-  ctx.arcTo(x,y+h,x,y,r);
-  ctx.arcTo(x,y,x+w,y,r);
-  ctx.closePath();
-}
+window.addEventListener("click", dropBrick);
+window.addEventListener("keydown", e => {
+  if (e.code === "Space") dropBrick();
+});
 
-// 迴圈
-function loop(ts){
-  if(!running){ last = ts; draw(); return requestAnimationFrame(loop); }
-  const dt = Math.min(0.033, (ts - last)/1000 || 0.016);
-  last = ts;
-  step(dt);
-  draw();
-  requestAnimationFrame(loop);
-}
-
-// 控制
-function start(){
-  running = true; timeLeft = 15; score = 0;
-  document.getElementById('time').textContent = 'Time 15.0';
-  document.getElementById('score').textContent = 'Score 0';
-  document.getElementById('time').classList.remove('flash');
-  resetWorld(); spawnMover();
-  document.getElementById('center').style.display='none';
-}
-function gameOver(reason){
-  running = false;
-  const p = document.getElementById('panel');
-  p.innerHTML = `
-    <h2>結束囉！</h2>
-    <p>原因：${reason}｜得分：<b>${score}</b></p>
-    <div style="display:flex;gap:8px;justify-content:center">
-      <button id="retry">再玩一次</button>
-    </div>`;
-  document.getElementById('center').style.display='flex';
-  document.getElementById('retry').onclick = start;
-}
-
-// 面板按鈕
-document.getElementById('start').onclick = start;
-document.getElementById('how').onclick = ()=>{
-  const p = document.getElementById('panel');
-  p.innerHTML = `
-    <h2>操作說明</h2>
-    <p>上方磚左右移動；點一下或按空白鍵落下。<br>與上層重疊 ≥ 50% 才算堆上，否則會持續掉落直到出畫面。</p>
-    <div style="display:flex;gap:8px;justify-content:center">
-      <button id="ok">我知道了，開始！</button>
-    </div>`;
-  document.getElementById('ok').onclick = start;
-};
-
-// 除錯訊息（看得到代表JS有執行）
-$dbg.textContent = 'BOOT OK · img: pending';
-img.onload = ()=>{ imgOK=true; AR=img.naturalWidth/img.naturalHeight; $dbg.textContent='BOOT OK · img: OK'; };
-img.onerror= ()=>{ imgOK=false; $dbg.textContent='BOOT OK · img: MISSING (using gray block)'; };
-
-requestAnimationFrame(loop);
-})();
+// 開始
+spawnBrick();
 </script>
 </body>
 </html>
