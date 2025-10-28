@@ -42,13 +42,6 @@
   .big.bump{animation:bump .35s ease}
   @keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
   .timer{font-variant-numeric:tabular-nums; color:#d9e7ff}
-  .rank{font-weight:900; font-size:14px; padding:4px 8px; border-radius:999px; border:1px solid var(--stroke); background:rgba(255,255,255,.08)}
-  .rank.ss{background:linear-gradient(90deg,#ffd24d,#ff9a3c); color:#1a1000}
-  .rank.s{background:linear-gradient(90deg,#9bffb6,#66e0ff); color:#001714}
-  .rank.a{background:#2a7ef01a}
-  .rank.b{background:#27c93f1a}
-  .rank.c{background:#ffb0201a}
-  .rank.f{background:#ff4d4d1a}
 
   .controls{position:absolute; left:0; right:0; bottom:10px; z-index:3; display:flex; gap:10px; justify-content:center; align-items:center; padding:0 12px}
   .btn{appearance:none; border:1px solid var(--stroke); color:var(--text); cursor:pointer; background:var(--glass); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); font-weight:800; border-radius:14px; padding:12px 14px}
@@ -63,7 +56,7 @@
   .body{padding:12px 14px; display:grid; gap:12px}
   .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
   .swatch{height:80px; border-radius:12px; border:1px solid var(--stroke); background:#000}
-  .meta{font-size:12px; color:var(--muted)}
+  .meta{font-size:12px; color:#94a0b2}
   .tag{font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid var(--stroke); background:var(--glass); color:#cfe6ff}
 
   @media(min-width:900px){ main{grid-template-columns:1.25fr 1fr; align-items:start} details[open]{display:block} summary{display:none} }
@@ -72,24 +65,41 @@
   @keyframes fade{0%{opacity:0; transform:translate(-50%,-6px)}20%{opacity:1; transform:translate(-50%,0)}80%{opacity:1}100%{opacity:0}}
 
   /* 中央巨大倒數（<=5秒時顯示） */
-  .centerCount{
-    position:absolute; inset:0; display:none; place-items:center; z-index:4; pointer-events:none;
-    color:#fff;
-    text-shadow:0 8px 40px rgba(0,0,0,.55);
-    font-weight:900; font-variant-numeric:tabular-nums;
-  }
+  .centerCount{position:absolute; inset:0; display:none; place-items:center; z-index:4; pointer-events:none; color:#fff; text-shadow:0 8px 40px rgba(0,0,0,.55); font-weight:900; font-variant-numeric:tabular-nums;}
   .centerCount.show{display:grid}
-  .centerCount .num{
-    font-size:22vmin; line-height:1; transform:scale(1); opacity:.95;
-    animation:pop 700ms ease-out;
-  }
-  @keyframes pop{
-    0%{transform:scale(.6); opacity:.2}
-    40%{transform:scale(1.15); opacity:1}
-    100%{transform:scale(1); opacity:.95}
-  }
+  .centerCount .num{font-size:22vmin; line-height:1; transform:scale(1); opacity:.95; animation:pop 700ms ease-out;}
+  @keyframes pop{0%{transform:scale(.6); opacity:.2}40%{transform:scale(1.15); opacity:1}100%{transform:scale(1); opacity:.95}}
 
-  canvas{display:none}
+  /* 名字輸入 Modal */
+  .mask{position:fixed; inset:0; background:rgba(0,0,0,.52); display:none; place-items:center; z-index:60; padding:16px}
+  .mask.show{display:grid}
+  .card{
+    width:min(680px, 96vw); border:1px solid var(--stroke); border-radius:18px;
+    background:linear-gradient(180deg,#131824,#0e1420); box-shadow:0 20px 60px rgba(0,0,0,.55);
+    padding:16px;
+  }
+  .card h2{margin:0 0 12px; font-size:20px}
+  .field{display:flex; gap:10px; margin-top:8px}
+  .input{flex:1; background:#0c111b; border:1px solid #223048; color:#e8eef7; padding:10px 12px; border-radius:10px}
+  .btnPri{appearance:none; border:1px solid #175bba; background:linear-gradient(180deg,#1a8cff,#0066ff); color:#fff; font-weight:800; border-radius:12px; padding:10px 14px; cursor:pointer}
+  .btnSec{appearance:none; border:1px solid var(--stroke); background:var(--glass); color:var(--text); font-weight:800; border-radius:12px; padding:10px 14px; cursor:pointer}
+
+  /* 結算 Modal */
+  .modal{position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; place-items:center; padding:16px; z-index:50;}
+  .modal.show{display:grid}
+  .sumRow{display:flex; align-items:baseline; gap:10px; margin:10px 0 16px}
+  .sumVal{font-size:34px; font-weight:900}
+  .bestBadge{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid #66512c; background:linear-gradient(180deg, #2b220e, #1d1609); color:#ffd87a; font-weight:800}
+  .bestBadge.sparkle{animation:spark 1.2s ease-in-out infinite}
+  @keyframes spark{0%{box-shadow:0 0 0 rgba(255,216,122,0)}50%{box-shadow:0 0 24px rgba(255,216,122,.45)}100%{box-shadow:0 0 0 rgba(255,216,122,0)}}
+  .table{width:100%; border-collapse:separate; border-spacing:0 8px; font-size:14px}
+  .row{background:var(--glass); border:1px solid var(--stroke); border-radius:12px; overflow:hidden}
+  .row td{padding:10px}
+  .sw{width:36px; height:20px; border-radius:6px; border:1px solid var(--stroke); display:inline-block; vertical-align:middle}
+  .actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; margin-top:12px}
+  .leader{margin-top:12px; border-top:1px dashed #2a3446; padding-top:12px}
+  .leader h3{margin:0 0 8px; font-size:16px}
+  .leader ol{margin:0; padding-left:18px}
 </style>
 </head>
 <body>
@@ -110,10 +120,9 @@
           <div class="mini" id="hudShot"></div>
           <div class="cap"><span class="label">你的拍攝</span><span class="val" id="hudShotHex">—</span></div>
         </div>
-        <div class="score">
+        <div class="score" title="以 0–100% 表示相似度">
           <span class="timer">剩 <span id="timeLeft">10.0</span>s</span>
-          <span class="rank" id="rank">—</span>
-          <span class="big" id="score">0</span>
+          <span class="big" id="score">0%</span>
         </div>
       </div>
 
@@ -160,14 +169,63 @@
   <canvas id="canvas" width="720" height="960"></canvas>
 </main>
 
-<footer>提示：倒數期間可不限次拍照；時間到會自動進入下一回合。</footer>
+<footer>提示：倒數期間可不限次拍照；時間到會自動進入下一回合並統計總分。</footer>
+
+<!-- 名字輸入 -->
+<div id="nameMask" class="mask" role="dialog" aria-modal="true">
+  <div class="card">
+    <h2>請輸入你的名字</h2>
+    <p class="meta">會用於排行榜（最多 32 字，之後可在右上角清除瀏覽器儲存重新輸入）。</p>
+    <div class="field">
+      <input id="nameInput" class="input" maxlength="32" placeholder="例如：Jerry" />
+      <button id="nameOK" class="btnPri">確定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 結算 Modal -->
+<div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+  <div class="card" id="resultCard">
+    <h2 id="resultTitle">本局成績</h2>
+    <div class="sumRow">
+      <div>平均相似度</div>
+      <div id="avgVal" class="sumVal">0%</div>
+      <div id="bestWrap" style="margin-left:auto; display:none;">
+        <span class="bestBadge" id="bestBadge">⭐ 最佳單回合 <span id="bestVal">0%</span></span>
+      </div>
+    </div>
+    <table class="table">
+      <thead>
+        <tr><th>回合</th><th>相似度</th><th>目標/拍攝</th></tr>
+      </thead>
+      <tbody id="resultRows"></tbody>
+    </table>
+
+    <div class="leader" id="leaderboard">
+      <h3>排行榜 TOP 5</h3>
+      <ol id="leaderList"></ol>
+    </div>
+
+    <div class="actions">
+      <button id="btnSavePng" class="btnSec">📸 下載成圖片</button>
+      <button id="btnRetry" class="btnPri">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<!-- html2canvas for screenshot -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
 
 <script>
-(function(){
-  /** DOM **/
+(async function(){
+  /** ====== 你的 API（Google Apps Script） ====== */
+  const API_URL = 'https://script.google.com/macros/s/AKfycbxmbjTQba-b0LI5S4bwGtNahg2VW-PxTacQggzCQuepRsBZxNneqMV3rWcMHcU6p98/exec';
+
+  /** ====== DOM ====== */
   const video = document.getElementById('video');
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
   const btnStart = document.getElementById('btnStart');
   const btnNew = document.getElementById('btnNew');
   const btnCapture = document.getElementById('btnCapture');
@@ -177,8 +235,7 @@
   const hudShot = document.getElementById('hudShot');
   const hudShotHex = document.getElementById('hudShotHex');
 
-  const scoreEl = document.getElementById('score');
-  const rankEl = document.getElementById('rank');
+  const scoreEl = document.getElementById('score');   // 0–100%
   const timeLeftEl = document.getElementById('timeLeft');
   const bar = document.getElementById('bar');
   const toast = document.getElementById('toast');
@@ -194,31 +251,48 @@
   const roundNowEl = document.getElementById('roundNow');
   const roundMaxEl = document.getElementById('roundMax');
 
-  // 中央倒數
   const centerCountdown = document.getElementById('centerCountdown');
   const centerNum = centerCountdown.querySelector('.num');
+
+  // 名字輸入
+  const nameMask = document.getElementById('nameMask');
+  const nameInput = document.getElementById('nameInput');
+  const nameOK = document.getElementById('nameOK');
+
+  // 結算
+  const modal = document.getElementById('modal');
+  const resultCard = document.getElementById('resultCard');
+  const resultRows = document.getElementById('resultRows');
+  const avgVal = document.getElementById('avgVal');
+  const bestWrap = document.getElementById('bestWrap');
+  const bestBadge = document.getElementById('bestBadge');
+  const bestVal = document.getElementById('bestVal');
+  const leaderList = document.getElementById('leaderList');
+
+  const btnRetry = document.getElementById('btnRetry');
+  const btnSavePng = document.getElementById('btnSavePng');
+
+  /** ====== State ====== */
+  const ROUND_MAX = 3;
+  const TIME_PER_ROUND = 10.0; // 秒
+  let roundNow = 1, stream = null, raf = null;
+  let target = null;             // {r,g,b}
+  let lastShot = {r:17,g:17,b:17};
+  let lastScore = 0;             // 0–100（相似度%）
+  const results = [];            // {round, percent, targetHex, shotHex}
   let lastCenterShown = null;
 
-  /** State **/
-  const ROUND_MAX = 3;
-  const TIME_PER_ROUND = 10.0; // 10 秒
-  let roundNow = 1;
-  let stream = null, raf = null;
-  let target = null; // {r,g,b}
-
-  /** Color utils **/
+  /** ====== Utils: 色彩與計分 ====== */
   function rgbToHex({r,g,b}){ return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('').toUpperCase(); }
   function rgbToHsl({r,g,b}){ r/=255; g/=255; b/=255; const max=Math.max(r,g,b), min=Math.min(r,g,b); let h=0,s=0,l=(max+min)/2; if(max!==min){ const d=max-min; s=l>0.5? d/(2-max-min): d/(max+min); switch(max){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;break;} h/=6;} return {h:Math.round(h*360), s:Math.round(s*100), l:Math.round(l*100)}; }
   function srgbToX(v){ return (v<=0.04045)? v/12.92 : Math.pow((v+0.055)/1.055,2.4); }
   function rgbToLab({r,g,b}){ let R=srgbToX(r/255), G=srgbToX(g/255), B=srgbToX(b/255); let X=R*0.4124564+G*0.3575761+B*0.1804375; let Y=R*0.2126729+G*0.7151522+B*0.0721750; let Z=R*0.0193339+G*0.1191920+B*0.9503041; const Xn=0.95047, Yn=1.00000, Zn=1.08883; function f(t){ return t>0.008856? Math.cbrt(t) : (7.787*t+16/116); } let fx=f(X/Xn), fy=f(Y/Yn), fz=f(Z/Zn); return {L:116*fy-16, a:500*(fx-fy), b:200*(fy-fz)}; }
   function ciede2000(l1,l2){ const {L:L1,a:a1,b:b1}=l1, {L:L2,a:a2,b:b2}=l2; const kL=1,kC=1,kH=1; const C1=Math.hypot(a1,b1), C2=Math.hypot(a2,b2), Cbar=(C1+C2)/2; const G=0.5*(1-Math.sqrt(Math.pow(Cbar,7)/(Math.pow(Cbar,7)+Math.pow(25,7)))); const a1p=(1+G)*a1, a2p=(1+G)*a2; const C1p=Math.hypot(a1p,b1), C2p=Math.hypot(a2p,b2); const h1p=(Math.atan2(b1,a1p)*180/Math.PI+360)%360, h2p=(Math.atan2(b2,a2p)*180/Math.PI+360)%360; const dLp=L2-L1, dCp=C2p-C1p; let dhp; if(C1p*C2p===0) dhp=0; else{ const diff=h2p-h1p; dhp=Math.abs(diff)<=180?diff:(diff>180?diff-360:diff+360); } const dHp=2*Math.sqrt(C1p*C2p)*Math.sin((dhp/2)*Math.PI/180); const Lbar=(L1+L2)/2, Cpbar=(C1p+C2p)/2; let hpbar; if(C1p*C2p===0) hpbar=h1p+h2p; else{ const diff=Math.abs(h1p-h2p); hpbar = diff<=180 ? (h1p+h2p)/2 : (h1p+h2p+360)/2 - ((h1p+h2p)>=360?360:0); } const T=1-0.17*Math.cos((hpbar-30)*Math.PI/180)+0.24*Math.cos((2*hpbar)*Math.PI/180)+0.32*Math.cos((3*hpbar+6)*Math.PI/180)-0.20*Math.cos((4*hpbar-63)*Math.PI/180); const Sl=1+(0.015*Math.pow(Lbar-50,2))/Math.sqrt(20+Math.pow(Lbar-50,2)); const Sc=1+0.045*Cpbar; const Sh=1+0.015*Cpbar*T; const dTheta=30*Math.exp(-Math.pow((hpbar-275)/25,2)); const Rc=2*Math.sqrt(Math.pow(Cpbar,7)/(Math.pow(Cpbar,7)+Math.pow(25,7))); const Rt=-Rc*Math.sin(2*dTheta*Math.PI/180); return Math.sqrt(Math.pow(dLp/(kL*Sl),2)+Math.pow(dCp/(kC*Sc),2)+Math.pow(dHp/(kH*Sh),2)+Rt*(dCp/(kC*Sc))*(dHp/(kH*Sh))); }
-  function scoreFromDeltaE(dE){ return Math.round(100*Math.exp(-Math.pow(dE/15,2))); }
-  function gradeFromScore(sc){ if(sc>=95) return {rank:'SS',cls:'ss'}; if(sc>=85) return {rank:'S',cls:'s'}; if(sc>=70) return {rank:'A',cls:'a'}; if(sc>=50) return {rank:'B',cls:'b'}; if(sc>=30) return {rank:'C',cls:'c'}; return {rank:'F',cls:'f'}; }
-  function judgeFromDeltaE(dE){ if(dE<2) return "幾乎一樣 😲"; if(dE<5) return "非常接近 🔥"; if(dE<10) return "不錯了 👍"; if(dE<20) return "還可以 👀"; return "再試試看～ 💪"; }
+  function percentFromDeltaE(dE){ return Math.round(100*Math.exp(-Math.pow(dE/15,2))); }
   function hslToRgb(h,s,l){ s/=100; l/=100; const c=(1-Math.abs(2*l-1))*s, hp=h/60, x=c*(1-Math.abs(hp%2-1)); let r1=0,g1=0,b1=0; if(0<=hp&&hp<1){r1=c;g1=x}else if(1<=hp&&hp<2){r1=x;g1=c}else if(2<=hp&&hp<3){g1=c;b1=x}else if(3<=hp&&hp<4){g1=x;b1=c}else if(4<=hp&&hp<5){r1=x;b1=c}else if(5<=hp&&hp<=6){r1=c;b1=x} const m=l-c/2; return {r:Math.round((r1+m)*255), g:Math.round((g1+m)*255), b:Math.round((b1+m)*255)}; }
   function randomTargetColor(){ const h=Math.floor(Math.random()*360); const s=Math.floor(55+Math.random()*35); const l=Math.floor(40+Math.random()*25); const rgb=hslToRgb(h,s,l); return {rgb, hsl:{h,s,l}}; }
 
-  /** capture center avg **/
+  /** ====== 拍攝取樣 ====== */
   function captureCenterAverage(ratio=0.44){
     const vw = video.videoWidth || 720, vh = video.videoHeight || 960;
     canvas.width = vw; canvas.height = vh;
@@ -230,14 +304,14 @@
     for(let i=0;i<img.length;i+=4){
       const R=img[i], G=img[i+1], B=img[i+2];
       const L=0.2126*R+0.7152*G+0.0722*B;
-      if(L<10||L>245) continue;
+      if(L<10||L>245) continue; // 略過太暗/太亮
       r+=R; g+=G; b+=B; cnt++;
     }
     if(!cnt) return {r:0,g:0,b:0};
     return {r:Math.round(r/cnt), g:Math.round(g/cnt), b:Math.round(b/cnt)};
   }
 
-  /** UI sync **/
+  /** ====== UI 同步 ====== */
   function setTarget({rgb,hsl}){
     target = rgb;
     const hex = rgbToHex(rgb);
@@ -246,6 +320,7 @@
     targetHsl.textContent = `HSL(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
   }
   function setShot(rgb){
+    lastShot = rgb;
     const hex = rgbToHex(rgb);
     hudShot.style.background = hex; hudShotHex.textContent = hex;
     shotSwatch.style.background = hex; shotHex.textContent = hex;
@@ -253,16 +328,15 @@
   }
   function resetShotAndScore(){
     setShot({r:17,g:17,b:17});
-    scoreEl.textContent = "0";
-    rankEl.textContent = "—";
-    rankEl.className = "rank";
+    lastScore = 0;
+    scoreEl.textContent = "0%";
     deltaEEl.textContent = "ΔE —";
     judgeEl.textContent = "尚未判定";
     centerCountdown.classList.remove('show');
     lastCenterShown = null;
   }
 
-  /** Timer + progress bar + 中央巨大倒數 **/
+  /** ====== 計時與倒數 ====== */
   function startTimer(){
     stopTimer();
     const T = TIME_PER_ROUND;
@@ -273,13 +347,11 @@
       timeLeftEl.textContent = remain.toFixed(1);
       bar.style.width = (Math.max(0, 1 - elapsed/T)*100).toFixed(2) + '%';
 
-      // 中央倒數：<=5 且 >0，顯示整數秒（向上取整確保每秒有完整顯示時間）
       const sec = Math.ceil(remain);
       if (sec <= 5 && sec > 0) {
         if (sec !== lastCenterShown) {
           lastCenterShown = sec;
           centerNum.textContent = String(sec);
-          // 重置動畫
           centerNum.classList.remove('num'); void centerCountdown.offsetWidth; centerNum.classList.add('num');
         }
         centerCountdown.classList.add('show');
@@ -293,7 +365,7 @@
         judgeEl.textContent = "時間到 ⏱️";
         centerCountdown.classList.remove('show');
         toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), 900);
-        autoNextRound();
+        lockRoundResultAndNext();
         return;
       }
       raf = requestAnimationFrame(tick);
@@ -302,7 +374,7 @@
   }
   function stopTimer(){ if(raf){ cancelAnimationFrame(raf); raf=null; } }
 
-  /** Camera **/
+  /** ====== 鏡頭 ====== */
   async function startCamera(){
     if(stream) return;
     try{
@@ -316,32 +388,128 @@
     }
   }
 
-  /** Rounds **/
-  const ROUND_MAX_VAL = 3;
-  roundMaxEl.textContent = String(ROUND_MAX_VAL);
-  roundNowEl.textContent = String(roundNow);
-
+  /** ====== 回合流程 ====== */
+  roundMaxEl.textContent = String(ROUND_MAX);
   function beginRound(){
     setTarget(randomTargetColor());
     resetShotAndScore();
     btnCapture.disabled = false;
     startTimer();
   }
-  function autoNextRound(){
-    if(roundNow >= ROUND_MAX_VAL){ return; }
-    roundNow += 1;
-    roundNowEl.textContent = String(roundNow);
+
+  function lockRoundResultAndNext(){
+    const tgtHex = hudTargetHex.textContent || '#000000';
+    const shotHexNow = hudShotHex.textContent || '#000000';
+    results.push({ round: results.length+1, percent: lastScore, targetHex: tgtHex, shotHex: shotHexNow });
+
+    if(results.length >= ROUND_MAX){
+      showSummary();
+      return;
+    }
+    roundNowEl.textContent = String(results.length + 1);
     beginRound();
   }
 
-  /** Events **/
+  /** ====== 結算頁：上傳、排行、徽章、截圖 ====== */
+  async function showSummary(){
+    // 平均、最佳
+    const avg = Math.round(results.reduce((s,r)=>s+r.percent,0)/results.length);
+    const best = results.reduce((m,r)=> r.percent>m.percent? r:m, results[0]);
+
+    avgVal.textContent = `${avg}%`;
+    // 最佳徽章
+    bestWrap.style.display = 'inline-block';
+    bestVal.textContent = `${best.percent}%`;
+    bestBadge.classList.toggle('sparkle', best.percent >= 90);
+
+    // 填表
+    resultRows.innerHTML = '';
+    results.forEach(r=>{
+      const tr = document.createElement('tr');
+      tr.className = 'row';
+      tr.innerHTML = `
+        <td>第 ${r.round}</td>
+        <td><strong>${r.percent}%</strong>${r===best? ' <span class="bestBadge" style="margin-left:8px;">⭐</span>':''}</td>
+        <td>
+          <span class="sw" style="background:${r.targetHex}"></span>
+          <small style="opacity:.8"> ${r.targetHex}</small>
+          <span style="opacity:.5; margin:0 6px">→</span>
+          <span class="sw" style="background:${r.shotHex}"></span>
+          <small style="opacity:.8"> ${r.shotHex}</small>
+        </td>`;
+      resultRows.appendChild(tr);
+    });
+
+    modal.classList.add('show');
+
+    // 上傳分數
+    const name = getPlayerName();
+    try{
+      await fetch(API_URL, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({name, score: avg})
+      });
+    }catch(err){ console.warn('Upload failed:', err); }
+
+    // 取得排行榜
+    try{
+      const top = await fetch(API_URL + '?limit=5').then(r=>r.json());
+      leaderList.innerHTML = '';
+      (Array.isArray(top)?top:[]).forEach(item=>{
+        const li = document.createElement('li');
+        li.textContent = `${item.name} — ${item.score}%`;
+        leaderList.appendChild(li);
+      });
+    }catch(err){
+      leaderList.innerHTML = '<li class="meta">排行榜載入失敗</li>';
+    }
+  }
+
+  function resetGame(){
+    results.length = 0;
+    roundNow = 1;
+    roundNowEl.textContent = '1';
+    beginRound();
+  }
+
+  // 下載成圖片
+  btnSavePng.addEventListener('click', async ()=>{
+    // 等待 html2canvas 載入
+    if (typeof html2canvas === 'undefined') {
+      alert('畫布工具尚未載入，請稍後再試。');
+      return;
+    }
+    const canvasShot = await html2canvas(resultCard, {backgroundColor: null});
+    const link = document.createElement('a');
+    link.download = 'color-match-result.png';
+    link.href = canvasShot.toDataURL('image/png');
+    link.click();
+  });
+
+  /** ====== 名字儲存 ====== */
+  function getPlayerName(){
+    return localStorage.getItem('cm_name') || 'Player';
+  }
+  function ensurePlayerName(){
+    const saved = localStorage.getItem('cm_name');
+    if(saved && saved.trim()) return;
+    nameMask.classList.add('show');
+  }
+  nameOK.addEventListener('click', ()=>{
+    const v = (nameInput.value||'').trim().slice(0,32) || 'Player';
+    localStorage.setItem('cm_name', v);
+    nameMask.classList.remove('show');
+  });
+
+  /** ====== 事件 ====== */
   btnStart.addEventListener('click', async ()=>{
+    ensurePlayerName();
     await startCamera();
     if (video.readyState >= 2){ beginRound(); btnStart.disabled = true; }
     else { video.addEventListener('loadedmetadata', ()=>{ beginRound(); btnStart.disabled = true; }, {once:true}); }
   });
 
-  // 換題：不影響倒數；依然可拍照
   btnNew.addEventListener('click', ()=>{
     setTarget(randomTargetColor());
     resetShotAndScore();
@@ -349,27 +517,28 @@
     if (navigator.vibrate) navigator.vibrate(8);
   });
 
-  // 拍照：倒數內可不限次；更新分數＋等級
   btnCapture.addEventListener('click', ()=>{
     if(btnCapture.disabled || !target) return;
     const shot = captureCenterAverage(0.44);
     setShot(shot);
     const dE = ciede2000(rgbToLab(target), rgbToLab(shot));
-    const sc = scoreFromDeltaE(dE);
-    const {rank, cls} = gradeFromScore(sc);
+    const percent = percentFromDeltaE(dE);
+    lastScore = percent;
 
-    scoreEl.textContent = String(sc);
-    scoreEl.classList.remove('bump'); void scoreEl.offsetWidth; scoreEl.classList.add('bump');
-
-    rankEl.textContent = rank;
-    rankEl.className = `rank ${cls}`;
-
+    scoreEl.textContent = `${percent}%`;
     deltaEEl.textContent = `ΔE ${dE.toFixed(2)}`;
-    judgeEl.textContent = judgeFromDeltaE(dE);
-
+    judgeEl.textContent = dE<2 ? "幾乎一樣 😲" : dE<5 ? "非常接近 🔥" : dE<10 ? "不錯了 👍" : dE<20 ? "還可以 👀" : "再試試看～ 💪";
     if (navigator.vibrate) navigator.vibrate(12);
   });
 
+  btnRetry.addEventListener('click', ()=>{
+    modal.classList.remove('show');
+    resetGame();
+  });
+
+  // 預設回合顯示
+  roundNowEl.textContent = '1';
+  roundMaxEl.textContent = String(ROUND_MAX);
 })();
 </script>
 </body>
